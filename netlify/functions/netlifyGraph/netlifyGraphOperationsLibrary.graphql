@@ -1,0 +1,11 @@
+query downloadLastMonth @netlify(id: """2b5acda4-965a-4d3f-a023-1337a657541e""", doc: """An example query to start with.""") {
+  npm {
+    package(name: "@palmabit/react-cookie-law") {
+      downloads {
+        lastMonth {
+          count
+        }
+      }
+    }
+  }
+}
