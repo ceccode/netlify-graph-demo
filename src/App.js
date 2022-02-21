@@ -1,25 +1,43 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import ViewPackageDownload from "./components/ViewPackageDownload";
+import "./App.css";
 
-function App() {
+const BASE_URL = process.env.REACT_APP_BASE_URL;
+const PORT = process.env.REACT_APP_FUNCTIONS_PORT;
+
+const App = () => {
+  const [count, setCount] = useState(null);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const function_name = "getDownloadLastMonth";
+
+    const base_url =
+      process.env.NODE_ENV === "development" ? `${BASE_URL}:${PORT}` : ``;
+
+    const url = `${base_url}/.netlify/functions/${function_name}`;
+
+    let response = await fetch(url);
+    let data = await response.json();
+
+    setCount(
+      data.getDownloadLastMonthData.npm.package.downloads.lastMonth.count
+    );
+
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <main className="App-main">
+        <p>React-cookie-law package</p>
+        <form onSubmit={handleSubmit}>
+          <button>View last month downloads</button>
+        </form>
+        <ViewPackageDownload count={count} />
+      </main>
     </div>
   );
-}
+};
 
 export default App;

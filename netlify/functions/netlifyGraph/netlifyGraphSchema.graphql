@@ -7,6 +7,17 @@ directive @netlify(
   id: String!
 ) on QUERY | MUTATION | SUBSCRIPTION | FRAGMENT_DEFINITION
 
+"""An internal directive used by Netlify Graph to handle caching"""
+directive @netlifyCacheControl(
+  """
+  Whether to fallback to a previous successful response if the current request fails
+  """
+  fallbackOnError: Boolean
+
+  """The cache strategy for this operation."""
+  cacheStrategy: OneGraphPersistedQueryCacheStrategyArg
+) on QUERY
+
 input GitHubStatusEventSubscriptionInput {
   """The owner of the repo, the `octocat` in `octocat/Hello-World`."""
   repoOwner: String!
@@ -6967,6 +6978,24 @@ type SignoutServicesResponsePayload {
   me: Viewer!
 }
 
+input OneGraphCreateSharedDocumentInput {
+  """A description for the operation. Maximum length is 2096 characters."""
+  description: String
+
+  """
+  The Netlify siteId that this operation should be associated with. The currently-authenticated user must have access to this site in Netlify.
+  """
+  siteId: String
+
+  """The shared operation text. Maximum length is 1mb."""
+  body: String!
+}
+
+type OneGraphCreateSharedDocumentResponsePayload {
+  """The shared document that was created."""
+  sharedDocument: OneGraphSharedDocument!
+}
+
 input OneGraphCreateNetlifyTestEventDataInput {
   payload: JSON!
 }
@@ -8474,6 +8503,9 @@ type OneGraphMutation {
   deleteNetlifyCliSession(input: OneGraphDeleteNetlifyCliSessionInput!): OneGraphDeleteNetlifyCliSessionResponsePayload!
   createNetlifyCliLogEvent(input: OneGraphCreateNetlifyLogEvent!): OneGraphCreateNetlifyLogResponsePayload!
   createNetlifyCliTestEvent(input: OneGraphCreateNetlifyTestEvent!): OneGraphCreateNetlifyTestResponsePayload!
+
+  """Create a shared document"""
+  createSharedDocument(input: OneGraphCreateSharedDocumentInput!): OneGraphCreateSharedDocumentResponsePayload!
 }
 
 enum NpmPublishPackagAccessEnumArg {
@@ -9249,6 +9281,60 @@ type GitHubQuery {
   Use this as an escape hatch if OneGraph does not yet support functionality of the underlying API.
   """
   makeRestCall: GithubPassthroughQuery!
+}
+
+input OneGraphSharedDocumentsModerationStatusFilter {
+  equalTo: OneGraphSharedDocumentModerationStatusEnum
+}
+
+input OneGraphSharedDocumentsServicesFilter {
+  in: [OneGraphServiceEnumArg!]
+  equalTo: OneGraphServiceEnumArg
+}
+
+input OneGraphSharedDocumentsFilter {
+  moderationStatus: OneGraphSharedDocumentsModerationStatusFilter
+  services: OneGraphSharedDocumentsServicesFilter
+}
+
+"""A list of shared documents"""
+type OneGraphSharedDocumentConnection {
+  nodes: [OneGraphSharedDocument!]!
+}
+
+"""Moderation status"""
+enum OneGraphSharedDocumentModerationStatusEnum {
+  PUBLISHED
+  UNPUBLISHED
+}
+
+type OneGraphSharedDocument {
+  """The id of the shared document"""
+  id: String!
+
+  """The siteId that the shared document originated from"""
+  siteId: String
+
+  """The text of the GraphQL document"""
+  body: String!
+
+  """Services that appear in the query"""
+  services: [OneGraphServiceInfo!]!
+
+  """Operation name"""
+  operationName: String
+
+  """Document description"""
+  description: String
+
+  """Current moderation status of the query"""
+  moderationStatus: OneGraphSharedDocumentModerationStatusEnum!
+
+  """Timestamp the document was created, in rfc3339 format."""
+  createdAt: String!
+
+  """Timestamp the document was last updated, in rfc3339 format."""
+  updatedAt: String!
 }
 
 """The status of a cli session"""
@@ -10061,6 +10147,11 @@ type OneGraphAdrollServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Asana"""
@@ -10107,6 +10198,11 @@ type OneGraphAsanaServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Box"""
@@ -10153,6 +10249,11 @@ type OneGraphBoxServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Contentful"""
@@ -10199,6 +10300,11 @@ type OneGraphContentfulServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Dev.to"""
@@ -10245,6 +10351,11 @@ type OneGraphDevToServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Docusign"""
@@ -10291,6 +10402,11 @@ type OneGraphDocusignServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Dribbble"""
@@ -10337,6 +10453,11 @@ type OneGraphDribbbleServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Dropbox"""
@@ -10383,6 +10504,11 @@ type OneGraphDropboxServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Egghead.io"""
@@ -10429,6 +10555,11 @@ type OneGraphEggheadioServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Eventil"""
@@ -10475,6 +10606,11 @@ type OneGraphEventilServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Facebook"""
@@ -10521,6 +10657,11 @@ type OneGraphFacebookServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Firebase"""
@@ -10567,6 +10708,11 @@ type OneGraphFirebaseServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 type OneGraphGitHubAppWebhook {
@@ -10618,6 +10764,11 @@ type OneGraphGitHubServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
   gitHubAppWebhook: OneGraphGitHubAppWebhook
 }
 
@@ -10665,6 +10816,11 @@ type OneGraphGmailServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Gong"""
@@ -10711,6 +10867,11 @@ type OneGraphGongServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google"""
@@ -10757,6 +10918,11 @@ type OneGraphGoogleServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Ads"""
@@ -10803,6 +10969,11 @@ type OneGraphGoogleAdsServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Analytics"""
@@ -10849,6 +11020,11 @@ type OneGraphGoogleAnalyticsServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Calendar"""
@@ -10895,6 +11071,11 @@ type OneGraphGoogleCalendarServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Compute"""
@@ -10941,6 +11122,11 @@ type OneGraphGoogleComputeServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Docs"""
@@ -10987,6 +11173,11 @@ type OneGraphGoogleDocsServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Search Console"""
@@ -11033,6 +11224,11 @@ type OneGraphGoogleSearchConsoleServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Google Translate"""
@@ -11079,6 +11275,11 @@ type OneGraphGoogleTranslateServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Hubspot"""
@@ -11125,6 +11326,11 @@ type OneGraphHubspotServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Intercom"""
@@ -11171,6 +11377,11 @@ type OneGraphIntercomServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Mailchimp"""
@@ -11217,6 +11428,11 @@ type OneGraphMailchimpServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Meetup"""
@@ -11263,6 +11479,11 @@ type OneGraphMeetupServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Netlify"""
@@ -11309,6 +11530,11 @@ type OneGraphNetlifyServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Notion"""
@@ -11355,6 +11581,11 @@ type OneGraphNotionServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Outreach"""
@@ -11401,6 +11632,11 @@ type OneGraphOutreachServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Product Hunt"""
@@ -11447,6 +11683,11 @@ type OneGraphProductHuntServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for QuickBooks"""
@@ -11493,6 +11734,11 @@ type OneGraphQuickbooksServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Salesforce"""
@@ -11539,6 +11785,11 @@ type OneGraphSalesforceServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Sanity"""
@@ -11585,6 +11836,11 @@ type OneGraphSanityServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Slack Event Webhook for an app."""
@@ -11661,6 +11917,11 @@ type OneGraphSlackServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
   slackEventWebhook: OneGraphSlackEventWebhook
 }
 
@@ -11708,6 +11969,11 @@ type OneGraphSpotifyServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Stripe"""
@@ -11754,6 +12020,11 @@ type OneGraphStripeServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Trello"""
@@ -11800,6 +12071,11 @@ type OneGraphTrelloServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Twilio"""
@@ -11846,6 +12122,11 @@ type OneGraphTwilioServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Twitter"""
@@ -11892,6 +12173,11 @@ type OneGraphTwitterServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Twitch"""
@@ -11938,6 +12224,11 @@ type OneGraphTwitchTvServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for You Need a Budget"""
@@ -11984,6 +12275,11 @@ type OneGraphYnabServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for YouTube"""
@@ -12030,6 +12326,11 @@ type OneGraphYoutubeServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Vercel"""
@@ -12076,6 +12377,11 @@ type OneGraphZeitServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for Zendesk"""
@@ -12122,6 +12428,11 @@ type OneGraphZendeskServiceAuth implements OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """Custom OAuth client for a service"""
@@ -12168,6 +12479,11 @@ interface OneGraphServiceAuth {
 
   """Custom CNAME host."""
   cname: String
+
+  """
+  The redirect url that the user should add in the OAuth config on the service's settings page (external to Netlify).
+  """
+  redirectUri: String!
 }
 
 """A OneGraph Org"""
@@ -12453,6 +12769,18 @@ type OneGraphServiceQuery {
 
   """Get a Netlify CLI session by its id."""
   netlifyCliSession(id: String!): OneGraphNetlifyCliSession!
+
+  """Get a sharedDocument by its id"""
+  sharedDocument(id: String!): OneGraphSharedDocument!
+
+  """Get sharedDocument"""
+  sharedDocuments(
+    """
+    The number of shared documents to fetch. Defaults to 10, maximum of 100.
+    """
+    first: Int = 10
+    filter: OneGraphSharedDocumentsFilter
+  ): OneGraphSharedDocumentConnection!
 }
 
 """Download data for npm overall"""
