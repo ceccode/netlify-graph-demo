@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ViewPackageDownload from "./components/ViewPackageDownload";
 import "./App.css";
 
@@ -24,7 +24,6 @@ const App = () => {
     setCount(
       data.getDownloadLastMonthData.npm.package.downloads.lastMonth.count
     );
-
   };
 
   return (
